@@ -9,11 +9,33 @@ $port = $_ENV['DB_PORT'];
 $user = $_ENV['DB_USER'];
 $password = $_ENV['DB_PASSWORD'];
 $dbname = $_ENV['DB_NAME'];
-$conn = new mysqli($host, $user, $password, $dbname, $port);
 
+function connect_to_db($host, $user, $password, $dbname, $port) {
+    $mysqli = null;
+    $attempts = 0;
+    $max_attempts = 5;
 
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+    while (!$mysqli && $attempts < $max_attempts) {
+        try {
+            $mysqli = new mysqli($host, $user, $password, $dbname, $port);
+            if ($mysqli->connect_error) {
+                throw new Exception("Connection failed: ". $mysqli->connect_error);
+            }
+        } catch (Exception $e) {
+            echo "Attempt #$attempts failed: ". $e->getMessage(). "\n";
+            sleep(5);
+            $attempts++;
+        }
+    }
+
+    return $mysqli;
 }
-echo "Connected successfully";
+
+$conn = connect_to_db($host, $user, $password, $dbname, $port);
+
+if ($conn === null) {
+    die("Failed to establish a database connection after several attempts.");
+}
+
+echo "Connected successfully\n";
 ?>

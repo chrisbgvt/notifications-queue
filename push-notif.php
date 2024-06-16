@@ -22,7 +22,10 @@ $idempotency_key = uniqid('notification_', true);
 $sql = "INSERT INTO notifications (email, subject, body, idempotency_key) VALUES (?, ?, ?, ?)";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("ssss", $email, $subject, $body, $idempotency_key);
-$stmt->execute();
+if (!$stmt->execute()) {
+    error_log("Failed to insert notification: ". $stmt->error);
+    exit("Failed to insert notification.");
+}
 $stmt->close();
 $conn->close();
 ?>
