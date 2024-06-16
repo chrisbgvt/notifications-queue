@@ -47,8 +47,7 @@ while (true) {
             }
         }
     }
-    $conn->close();
-
     sleep(5);
 }
+$conn->close();
 ?>

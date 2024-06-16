@@ -6,31 +6,28 @@ $dotenv->load();
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception;
+use MailerSend\MailerSend;
+use MailerSend\Helpers\Builder\Recipient;
+use MailerSend\Helpers\Builder\EmailParams;
 
 function sendEmail($to, $subject, $body) {
-    $mail = new PHPMailer(true);
-
     try {
-        $mail->SMTPDebug = SMTP::DEBUG_OFF;
-        $mail->isSMTP();
-        $mail->Host = $_ENV['MAILERSEND_HOST'];
-        $mail->SMTPAuth = true;
-        $mail->Username = $_ENV['MAILERSEND_USERNAME'];
-        $mail->Password = $_ENV['MAILERSEND_PASSWORD'];
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port = 587;
+        $mailersend = new MailerSend(['api_key' => $_ENV['MAILERSEND_TOKEN']]);
 
-        // Recipients
-        $mail->setFrom($_ENV['MAILERSEND_USERNAME'], 'Notifications Module');
-        $mail->addAddress($to);
+        $recipients = [
+            new Recipient($to, 'Recipient Name')
+        ];
 
-        // Content
-        $mail->isHTML(true);
-        $mail->Subject = $subject;
-        $mail->Body = $body;
-        $mail->AltBody = strip_tags($body);
+        $emailParams = (new EmailParams())
+            ->setFrom($_ENV['MAILERSEND_SENDER'])
+            ->setFromName($to)
+            ->setRecipients($recipients)
+            ->setSubject($subject)
+            ->setHtml($body)
+            ->setText($body);
 
-        $mail->send();
+        $mailersend->email->send($emailParams);
+
         echo "Email sent successfully!";
     } catch (Exception $e) {
         echo "Email could not be sent. Mailer Error: {$mail->ErrorInfo}";
